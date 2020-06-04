@@ -1,10 +1,11 @@
-var request = require('request'); // "Request" library
+const request = require('request'); // "Request" library
+const readline = require("readline-sync")
 
-var client_id = '5352be5b021042188d2c62155df50f5d'; // Your client id
-var client_secret = '2d83ee2f9cc84e60b54e0aeb5f0e1f3d'; // Your secret
+const client_id = '5352be5b021042188d2c62155df50f5d'; // Your client id
+const client_secret = '2d83ee2f9cc84e60b54e0aeb5f0e1f3d'; // Your secret
 
 // your application requests authorization
-var authOptions = {
+const authOptions = {
   url: 'https://accounts.spotify.com/api/token',
   headers: {
     'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
@@ -15,13 +16,14 @@ var authOptions = {
   json: true
 };
 
-request.post(authOptions, function(error, response, body) {
+const spotifySearch = (username) =>  request.post(authOptions, function(error, response, body) {
   if (!error && response.statusCode === 200) {
 
     // use the access token to access the Spotify Web API
+
     var token = body.access_token;
     var options = {
-      url: 'https://api.spotify.com/v1/users/isaac.elliott1804',
+      url: 'https://api.spotify.com/v1/users/' + username,
       headers: {
         'Authorization': 'Bearer ' + token
       },
@@ -32,3 +34,8 @@ request.post(authOptions, function(error, response, body) {
     });
   }
 });
+
+console.log("Enter a spotify username?");
+let username = readline.question("> ");
+
+spotifySearch(username);
