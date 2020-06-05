@@ -54,9 +54,12 @@ const spotifySearchArtist = (name) =>  request.post(authOptions, function(error,
   }
 });
 
+
+
 console.log("Enter a spotify username?");
-let username = readline.question("> ");
+const username = readline.question("> ");
 spotifySearch(username);
+
 console.log("Enter an artist name")
 let name = readline.question("> ");
 spotifySearchArtist(name);
