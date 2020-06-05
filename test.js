@@ -39,9 +39,6 @@ const spotifyAPICall = (url, cb) =>  request.post(authOptions, function(error, r
 });
 
 
-
-
-
 const getPlaylists = (username) => {
   return new Promise((resolve, reject) => {
     spotifyAPICall('https://api.spotify.com/v1/users/' + username + '/playlists', (body) => {
@@ -50,32 +47,115 @@ const getPlaylists = (username) => {
   })
 }
 
-const viewTracks = (playlistID) => {
+const viewTracks = (playlistID, offset = 0, limit = 10) => {
   return new Promise((resolve, reject) => {
-    spotifyAPICall('https://api.spotify.com/v1/playlists/' + playlistID, (body) => {
+    spotifyAPICall('https://api.spotify.com/v1/playlists/' + playlistID + '/tracks?offset=' + offset + '&limit=' + limit, (body) => {
       resolve(body)
     });
   })
 }
 
-console.log("Enter a spotify username?");
+const ViewSong = (songID) => {
+  return new Promise((resolve, reject) => {
+    spotifyAPICall('https://api.spotify.com/v1/tracks/' + songID, (body) => {
+      resolve(body)
+    });
+  })
+}
 
-getPlaylists(readline.question("> ")).then((body) => {
-  console.log("select a playlist");
-  for(let i = 0; i < body.items.length; i++){
-    console.log((i+1) + ". " + body.items[i].name);
-  };
+const showPlaylists = async (username) => {
+  try {
+    const body = await getPlaylists(username);
 
-  viewTracks(body.items[readline.question("> ") - 1].id).then((body => {
-    for(i = 0; i < body["tracks"]["items"].length; i++){
-      let track = body["tracks"]["items"][i]["track"]
-      console.log(i+1);
+    console.log("select a playlist");
+
+    for(let i = 0; i < body["items"].length; i++){
+      console.log((i+1) + ". " + body["items"][i]["name"]);
+    };
+
+    let input = readline.question("> ") - 1;
+    showTracks(body["items"][input]["id"]);
+
+  } 
+  catch(err) {
+    console.log(err)
+  }
+}
+
+const showTracks = async (playlistID, offset = 0) => {
+  try {
+    const body = await viewTracks(playlistID, offset);
+
+    console.log(`Viewing from ${body["offset"] + 1} to ${body["offset"] + body["limit"]}`)
+
+    for(let i = 0; i < body["items"].length; i++){
+      let track = body["items"][i]["track"]
+      console.log("");
+      console.log(i + 1 + offset);
       console.log("name: " + track["name"]);
       for(let j = 0; j < track["artists"].length; j++){
         console.log("artist: " + track["artists"][j]["name"]);
       }
       console.log("album: " + track["album"]["name"]);
     }
-  }));
 
-});
+    if(body["offset"] + body["limit"] < body["total"]){
+      goNext =  true;
+    }
+    else {
+      goNext = false;
+    }
+    if(body["offset"] - body["limit"] >= 0){
+      goPrev = true;
+    }
+    else {
+      goPrev = false;
+    }
+
+    console.log("Type next or prev to navigate the playlist. Or select a track by it's number");
+    let input = readline.question("> ")
+    if(input === "next" && goNext){
+      showTracks(playlistID, body["offset"] + body["limit"])
+    }
+    else if(input === "prev" && goPrev) {
+      showTracks(playlistID, body["offset"] - body["limit"])
+    }
+    else if(body["items"][input - body["offset"] - 1]){
+      input = input - body["offset"] - 1;
+      showSong(body["items"][input]["track"]["id"]);
+    }
+    else {
+      startProgram();
+    }
+  }
+  catch(err) {
+    console.log(err)
+  }
+}
+
+const showSong = async (songID) => {
+  try {
+    const body = await ViewSong(songID);
+    console.log("");
+    console.log("name: " + body["name"]);
+    for(let i = 0; i < body["artists"].length; i++){
+      console.log("artist: " + body["artists"][i]["name"]);
+    }
+    
+    console.log("from the album: " + body["album"]["name"]);
+    console.log("release date: " + body["album"]["release_date"]);
+  }
+  catch(err) {
+    console.log(err);
+  }
+  finally {
+    startProgram();
+  }
+}
+
+const startProgram = () => {
+  let username = readline.question("enter username: ");
+  let test = showPlaylists(username);
+}
+
+startProgram();
