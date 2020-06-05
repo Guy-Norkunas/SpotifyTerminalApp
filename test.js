@@ -35,7 +35,28 @@ const spotifySearch = (username) =>  request.post(authOptions, function(error, r
   }
 });
 
+const spotifySearchArtist = (name) =>  request.post(authOptions, function(error, response, body) {
+  if (!error && response.statusCode === 200) {
+
+    // use the access token to access the Spotify Web API
+
+    var token = body.access_token;
+    var options = {
+      url: 'https://api.spotify.com/v1/search?q=' + name + '&type=artist',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      },
+      json: true
+    };
+    request.get(options, function(error, response, body) {
+      console.log(body);
+    });
+  }
+});
+
 console.log("Enter a spotify username?");
 let username = readline.question("> ");
-
 spotifySearch(username);
+console.log("Enter an artist name")
+let name = readline.question("> ");
+spotifySearchArtist(name);
